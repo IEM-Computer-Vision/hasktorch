@@ -15,7 +15,7 @@ import           Control.Monad                  ( foldM
                                                 , when
                                                 , void
                                                 )
-import           Data.HList
+import           Torch.HList
 import           Data.Proxy
 import           Foreign.ForeignPtr
 import           GHC.Generics
@@ -25,14 +25,14 @@ import           System.Environment
 import           System.IO.Unsafe
 import           System.Random
 
-import qualified ATen.Cast                     as ATen
-import qualified ATen.Class                    as ATen
-import qualified ATen.Type                     as ATen
-import qualified ATen.Managed.Type.Tensor      as ATen
+import qualified Torch.Internal.Cast                     as ATen
+import qualified Torch.Internal.Class                    as ATen
+import qualified Torch.Internal.Type                     as ATen
+import qualified Torch.Internal.Managed.Type.Tensor      as ATen
 import           Torch.Typed.Aux
 import           Torch.Typed.Tensor
 import           Torch.Typed.Parameter
-import           Torch.Typed.Native
+import           Torch.Typed.Functional
 import           Torch.Typed.Factories
 import           Torch.Typed.NN
 import           Torch.Typed.Autograd
@@ -43,7 +43,7 @@ import qualified Torch.NN                      as A
 import qualified Torch.Device                  as D
 import qualified Torch.DType                   as D
 import qualified Torch.Tensor                  as D
-import qualified Torch.Functions               as D
+import qualified Torch.Functional               as D
 import qualified Torch.TensorFactories         as D
 import qualified Image                         as I
 
@@ -80,11 +80,10 @@ errorCount
      , SumDTypeIsValid device 'D.Bool
      , ComparisonDTypeIsValid device 'D.Int64
      )
-  => Tensor device 'D.Float '[batchSize, outputFeatures]
-  -> Tensor device 'D.Int64 '[batchSize]
+  => Tensor device 'D.Float '[batchSize, outputFeatures] -- ^ prediction
+  -> Tensor device 'D.Int64 '[batchSize] -- ^ target
   -> Tensor device 'D.Float '[]
-errorCount prediction target =
-  toDType @D.Float . sumAll . ne (argmax @1 @DropDim prediction) $ target
+errorCount prediction = Torch.Typed.Tensor.toDType @D.Float . sumAll . ne (argmax @1 @DropDim prediction)
 
 train
   :: forall (batchSize :: Nat) (device :: (D.DeviceType, Nat)) model optim gradients parameters tensors
@@ -93,7 +92,7 @@ train
      , SumDTypeIsValid device 'D.Bool
      , ComparisonDTypeIsValid device 'D.Int64
      , KnownDevice device
-     , gradients ~ GradR parameters 'D.Float device
+     , HasGrad (HList parameters) (HList gradients)
      , tensors ~ gradients
      , HMap' ToDependent parameters tensors
      , ATen.Castable (HList gradients) [D.ATenTensor]
@@ -152,7 +151,7 @@ train initModel initOptim forward learningRate ptFile = do
     let from = (index_of_batch-1) * natValI @n
         to = (index_of_batch * natValI @n) - 1
         indexes = [from .. to]
-        input  = toDevice @device $ I.getImages @n data' indexes
-        target = toDevice @device $ I.getLabels @n data' indexes
+        input  = Torch.Typed.Tensor.toDevice @device $ I.getImages @n data' indexes
+        target = Torch.Typed.Tensor.toDevice @device $ I.getLabels @n data' indexes
     prediction <- forward' input
     return (crossEntropyLoss prediction target, errorCount prediction target)

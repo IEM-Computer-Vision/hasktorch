@@ -24,7 +24,7 @@ module Torch.Typed.AuxSpec where
 import           Prelude                 hiding ( sin )
 import           Control.Exception.Safe
 import           Foreign.Storable
-import           Data.HList
+import           Torch.HList
 import           Data.Proxy
 import           Data.Reflection
 import           GHC.TypeLits
@@ -33,16 +33,16 @@ import           System.IO.Unsafe
 import           Test.Hspec
 import           Test.QuickCheck
 
-import           ATen.Cast
-import qualified ATen.Managed.Type.Context     as ATen
+import           Torch.Internal.Cast
+import qualified Torch.Internal.Managed.Type.Context     as ATen
 import qualified Torch.Device                  as D
 import qualified Torch.DType                   as D
-import qualified Torch.Functions               as D
+import qualified Torch.Functional               as D
 import qualified Torch.Tensor                  as D
 import qualified Torch.TensorFactories         as D
 import qualified Torch.TensorOptions           as D
 import           Torch.Typed.Factories
-import           Torch.Typed.Native
+import           Torch.Typed.Functional
 import           Torch.Typed.Tensor
 
 instance Semigroup Spec where
@@ -126,8 +126,12 @@ cuda0 = Proxy @'( 'D.CUDA, 0)
 --       (SomeDeviceProxies (Proxy :: Proxy tt)) -> SomeDeviceProxies $ Proxy @(proxy ': tt)
 
 availableDevices =
-  let hasCuda = unsafePerformIO $ cast0 ATen.hasCUDA in
-    [ D.Device { D.deviceType = D.CPU, D.deviceIndex = 0 } ] <> (if hasCuda then [D.Device { D.deviceType = D.CUDA, D.deviceIndex = 0 }] else mempty)
+  let hasCuda = unsafePerformIO $ cast0 ATen.hasCUDA
+  in  [D.Device { D.deviceType = D.CPU, D.deviceIndex = 0 }]
+        <> (if hasCuda
+             then [D.Device { D.deviceType = D.CUDA, D.deviceIndex = 0 }]
+             else mempty
+           )
 
 spec :: Spec
 spec = return ()

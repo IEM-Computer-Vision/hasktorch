@@ -12,26 +12,29 @@ build-type:          Simple
 cabal-version:       >=1.10
 
 library
- exposed-modules:     Data.HList
-                    , Torch
+ exposed-modules:     Torch
+                    , Torch.HList
                     , Torch.Tensor
                     , Torch.TensorOptions
                     , Torch.DType
                     , Torch.Device
                     , Torch.TensorFactories
-                    , Torch.Functions
-                    , Torch.Functions.Native
+                    , Torch.Functional
+                    , Torch.Functional.Internal
                     , Torch.Initializers
                     , Torch.Autograd
                     , Torch.Typed
                     , Torch.Typed.Aux
                     , Torch.Typed.Factories
-                    , Torch.Typed.Native
+                    , Torch.Typed.Functional
                     , Torch.Typed.NN
                     , Torch.Typed.NN.Recurrent.Cell.LSTM
                     , Torch.Typed.NN.Recurrent.LSTM
+                    , Torch.Typed.NN.Recurrent.GRU
                     , Torch.Typed.Tensor
                     , Torch.Typed.Parameter
+                    , Torch.Typed.Device
+                    , Torch.Typed.DType
                     , Torch.Typed.Autograd
                     , Torch.Typed.Optim
                     , Torch.Typed.Serialize
@@ -66,7 +69,7 @@ test-suite spec
   hs-source-dirs:     test
   main-is:            Spec.hs
   other-modules:      FactorySpec
-                    , FunctionsSpec
+                    , FunctionalSpec
                     , GradSpec
                     , SparseSpec
                     , TensorSpec
@@ -75,7 +78,9 @@ test-suite spec
                     , Torch.Typed.AuxSpec
                     , Torch.Typed.TensorSpec
                     , Torch.Typed.FactoriesSpec
-                    , Torch.Typed.NativeSpec
+                    , Torch.Typed.FunctionalSpec
+                    , Torch.Typed.AutogradSpec
+                    , Torch.Typed.OptimSpec
                     , SerializeSpec
                     , RandomSpec
   default-language: Haskell2010
